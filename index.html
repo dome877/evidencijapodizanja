@@ -1,1 +1,169 @@
-Test
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidencija Podizanja - Authentication Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .auth-controls {
+            display: flex;
+            align-items: center;
+        }
+        .user-info {
+            margin-right: 15px;
+        }
+        button {
+            background-color: #0078d7;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #005a9e;
+        }
+        #loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+        }
+        #app {
+            display: none;
+        }
+        .protected-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .error-message {
+            background-color: #fde0dc;
+            color: #c53929;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading indicator -->
+    <div id="loading">
+        <p>Initializing application...</p>
+    </div>
+
+    <!-- Main application container (hidden until authenticated) -->
+    <div id="app">
+        <header>
+            <div class="logo">Evidencija Podizanja</div>
+            <div class="auth-controls">
+                <div id="user-info" class="user-info"></div>
+                <button id="logout-btn" onclick="window.Auth.logout()">Logout</button>
+            </div>
+        </header>
+
+        <div class="protected-content">
+            <h1>Protected Content</h1>
+            <p>This content is only visible to authenticated users.</p>
+            <p>You've successfully implemented Amazon Cognito authentication with AWS Lambda token exchange!</p>
+            <div id="user-details"></div>
+        </div>
+    </div>
+
+    <!-- Authentication script -->
+    <script src="auth.js"></script>
+    
+    <!-- Application script -->
+    <script>
+        // Parse JWT token to get user info
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error('Error parsing JWT', e);
+                return null;
+            }
+        }
+
+        // Display user information
+        function displayUserInfo() {
+            const idToken = window.Auth.getIdToken();
+            if (!idToken) return;
+            
+            const userData = parseJwt(idToken);
+            if (!userData) return;
+            
+            // Update header with user name/email
+            const userInfoElement = document.getElementById('user-info');
+            if (userInfoElement) {
+                userInfoElement.textContent = userData.email || userData.username || 'Authenticated User';
+            }
+            
+            // Show more details in the protected content area
+            const userDetailsElement = document.getElementById('user-details');
+            if (userDetailsElement && userData) {
+                let details = '<h3>Your User Information:</h3><ul>';
+                if (userData.email) details += `<li><strong>Email:</strong> ${userData.email}</li>`;
+                if (userData.phone_number) details += `<li><strong>Phone:</strong> ${userData.phone_number}</li>`;
+                if (userData.name) details += `<li><strong>Name:</strong> ${userData.name}</li>`;
+                details += '</ul>';
+                userDetailsElement.innerHTML = details;
+            }
+        }
+
+        // Initialize the application
+        async function initApp() {
+            try {
+                // Check if authenticated
+                const isAuthenticated = await window.Auth.initAuth();
+                
+                if (isAuthenticated) {
+                    console.log('User is authenticated');
+                    displayUserInfo();
+                    window.Auth.setupTokenRefresh();
+                }
+                
+                // Debug token info in console
+                window.Auth.debugTokens();
+            } catch (error) {
+                console.error('App initialization error:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div class="error-message">
+                        <h3>Application Error</h3>
+                        <p>${error.message}</p>
+                        <button onclick="window.location.reload()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
