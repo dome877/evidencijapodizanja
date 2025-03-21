@@ -136,11 +136,11 @@ function renderDeviceSummaries(deviceSummaries) {
     }
     
     deviceSummaries.forEach(device => {
-        // Only show percentage for "Ručni čitač" devices
+        // Only show percentage for devices that are NOT "Ručni čitač"
         const isHandheldReader = device.deviceName && device.deviceName.includes('Ručni čitač');
         
         let percentageHTML = '';
-        if (isHandheldReader) {
+        if (!isHandheldReader) {
             let percentageClass = 'poor';
             if (device.rfidPercentage >= 80) {
                 percentageClass = 'good';
