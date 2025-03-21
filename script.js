@@ -94,14 +94,14 @@ function processDataByDevice(data) {
             };
         }
         
-        // Store responsible person if available
-        if (item.responsiblePerson && !deviceGroups[deviceId].responsiblePerson) {
-            deviceGroups[deviceId].responsiblePerson = item.responsiblePerson;
+        // Store responsible person (zaduzio) if available
+        if (item.zaduzio && !deviceGroups[deviceId].responsiblePerson) {
+            deviceGroups[deviceId].responsiblePerson = item.zaduzio;
         }
         
-        // Store registration data if available
-        if (item.hookLiftId && !deviceGroups[deviceId].regOznaka) {
-            deviceGroups[deviceId].regOznaka = item.hookLiftId;
+        // Store registration data (reg_oznaka) if available
+        if (item.reg_oznaka && !deviceGroups[deviceId].regOznaka) {
+            deviceGroups[deviceId].regOznaka = item.reg_oznaka;
         }
         
         // Count RFID vs non-RFID pickups
@@ -136,8 +136,9 @@ function renderDeviceSummaries(deviceSummaries) {
     }
     
     deviceSummaries.forEach(device => {
-        // Only show percentage for devices that are NOT "Ručni čitač"
-        const isHandheldReader = device.deviceName && device.deviceName.includes('Ručni čitač');
+        // Check if device is a handheld reader (case insensitive)
+        const deviceNameLower = device.deviceName ? device.deviceName.toLowerCase() : '';
+        const isHandheldReader = deviceNameLower.includes('ručni čitač') || deviceNameLower.includes('rucni citac');
         
         let percentageHTML = '';
         if (!isHandheldReader) {
@@ -187,8 +188,8 @@ function renderPickupsList(pickups) {
             <p><strong>Time:</strong> ${pickup.dateTime}</p>
             <p><strong>RFID:</strong> ${pickup.rfid_value || 'None'}</p>
             <p><strong>Collection ID:</strong> ${pickup.collectionId || 'N/A'}</p>
-            <p><strong>Facility Name:</strong> ${pickup.real_estate_name || '-'}</p>
-            <p><strong>Facility Code:</strong> ${pickup.foreignId || '-'}</p>
+            <p><strong>Facility Name:</strong> ${pickup.NazivObjekta || pickup.real_estate_name || '-'}</p>
+            <p><strong>Facility Code:</strong> ${pickup.SifraObjekta || pickup.foreignId || '-'}</p>
         </div>
     `).join('');
 }
@@ -219,11 +220,11 @@ function showPickupDetails(pickupIndex, deviceId) {
             </div>
             <div class="detail-row">
                 <div class="detail-label">Facility Name:</div>
-                <div class="detail-value">${pickup.real_estate_name || '-'}</div>
+                <div class="detail-value">${pickup.NazivObjekta || pickup.real_estate_name || '-'}</div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">Facility Code:</div>
-                <div class="detail-value">${pickup.foreignId || '-'}</div>
+                <div class="detail-value">${pickup.SifraObjekta || pickup.foreignId || '-'}</div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">RFID Value:</div>
