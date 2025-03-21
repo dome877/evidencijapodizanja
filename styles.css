@@ -171,13 +171,24 @@ h2, h3 {
 }
 
 .pickup-item {
-    padding: 12px 0;
+    padding: 15px;
     border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .pickup-item:hover {
-    background-color: #f9f9f9;
+    background-color: #f5f9ff;
+}
+
+.pickup-item p {
+    margin: 5px 0;
+}
+
+.pickup-item p strong {
+    display: inline-block;
+    min-width: 120px;
+    color: #555;
 }
 
 .pickup-item:last-child {

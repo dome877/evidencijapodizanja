@@ -99,6 +99,11 @@ function processDataByDevice(data) {
             deviceGroups[deviceId].responsiblePerson = item.responsiblePerson;
         }
         
+        // Store registration data if available
+        if (item.hookLiftId && !deviceGroups[deviceId].regOznaka) {
+            deviceGroups[deviceId].regOznaka = item.hookLiftId;
+        }
+        
         // Count RFID vs non-RFID pickups
         deviceGroups[deviceId].totalPickups++;
         if (item.rfid_value && item.rfid_value !== '-') {
@@ -131,11 +136,18 @@ function renderDeviceSummaries(deviceSummaries) {
     }
     
     deviceSummaries.forEach(device => {
-        let percentageClass = 'poor';
-        if (device.rfidPercentage >= 80) {
-            percentageClass = 'good';
-        } else if (device.rfidPercentage >= 50) {
-            percentageClass = 'medium';
+        // Only show percentage for "Ručni čitač" devices
+        const isHandheldReader = device.deviceName && device.deviceName.includes('Ručni čitač');
+        
+        let percentageHTML = '';
+        if (isHandheldReader) {
+            let percentageClass = 'poor';
+            if (device.rfidPercentage >= 80) {
+                percentageClass = 'good';
+            } else if (device.rfidPercentage >= 50) {
+                percentageClass = 'medium';
+            }
+            percentageHTML = `<span class="percentage ${percentageClass}">${device.rfidPercentage}%</span>`;
         }
         
         const deviceCardHTML = `
@@ -145,7 +157,7 @@ function renderDeviceSummaries(deviceSummaries) {
                     <div class="device-stats">
                         <span class="stat">Pickups: ${device.totalPickups}</span>
                         <span class="stat">RFID: ${device.withRfid}</span>
-                        <span class="percentage ${percentageClass}">${device.rfidPercentage}%</span>
+                        ${percentageHTML}
                     </div>
                 </div>
                 <div class="device-details" id="device-${device.deviceId}">
@@ -175,6 +187,8 @@ function renderPickupsList(pickups) {
             <p><strong>Time:</strong> ${pickup.dateTime}</p>
             <p><strong>RFID:</strong> ${pickup.rfid_value || 'None'}</p>
             <p><strong>Collection ID:</strong> ${pickup.collectionId || 'N/A'}</p>
+            <p><strong>Facility Name:</strong> ${pickup.real_estate_name || '-'}</p>
+            <p><strong>Facility Code:</strong> ${pickup.foreignId || '-'}</p>
         </div>
     `).join('');
 }
@@ -196,6 +210,14 @@ function showPickupDetails(pickupIndex, deviceId) {
                 <div class="detail-value">${pickup.dateTime || 'N/A'}</div>
             </div>
             <div class="detail-row">
+                <div class="detail-label">Collection ID:</div>
+                <div class="detail-value">${pickup.collectionId || 'N/A'}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Device:</div>
+                <div class="detail-value">${pickup.deviceName || 'Unknown'}</div>
+            </div>
+            <div class="detail-row">
                 <div class="detail-label">Facility Name:</div>
                 <div class="detail-value">${pickup.real_estate_name || '-'}</div>
             </div>
@@ -210,14 +232,6 @@ function showPickupDetails(pickupIndex, deviceId) {
             <div class="detail-row">
                 <div class="detail-label">RFID Type:</div>
                 <div class="detail-value">${pickup.rfid_type || 'None'}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Device:</div>
-                <div class="detail-value">${pickup.deviceName || 'Unknown'}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Collection ID:</div>
-                <div class="detail-value">${pickup.collectionId || 'N/A'}</div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">Coordinates:</div>
