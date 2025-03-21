@@ -145,7 +145,7 @@ h2, h3 {
     cursor: pointer;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     font-weight: 500;
 }
 
@@ -153,9 +153,36 @@ h2, h3 {
     background-color: #f0f0f0;
 }
 
+.device-header-main {
+    display: flex;
+    flex-direction: column;
+}
+
+.device-name {
+    font-weight: 600;
+    color: #0078d7;
+    margin-bottom: 4px;
+}
+
+.device-additional-info {
+    font-size: 13px;
+    color: #555;
+    margin-top: 3px;
+}
+
+.device-info-item {
+    display: inline-block;
+    margin-right: 15px;
+    background-color: #e8f4f8;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
 .device-stats {
     display: flex;
     font-size: 14px;
+    align-self: flex-start;
+    margin-top: 2px;
 }
 
 .stat {

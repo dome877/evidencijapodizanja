@@ -140,6 +140,7 @@ function renderDeviceSummaries(deviceSummaries) {
         const deviceNameLower = device.deviceName ? device.deviceName.toLowerCase() : '';
         const isHandheldReader = deviceNameLower.includes('ručni čitač') || deviceNameLower.includes('rucni citac');
         
+        // Prepare percentage HTML
         let percentageHTML = '';
         if (!isHandheldReader) {
             let percentageClass = 'poor';
@@ -151,10 +152,22 @@ function renderDeviceSummaries(deviceSummaries) {
             percentageHTML = `<span class="percentage ${percentageClass}">${device.rfidPercentage}%</span>`;
         }
         
+        // Prepare additional info for non-expanded card
+        let additionalInfoHTML = '';
+        if (device.responsiblePerson) {
+            additionalInfoHTML += `<span class="device-info-item">Assigned to: ${device.responsiblePerson}</span>`;
+        }
+        if (device.regOznaka) {
+            additionalInfoHTML += `<span class="device-info-item">Reg: ${device.regOznaka}</span>`;
+        }
+        
         const deviceCardHTML = `
             <div class="device-card" data-device-id="${device.deviceId}">
                 <div class="device-header" onclick="toggleDeviceDetails('${device.deviceId}')">
-                    <span>${device.deviceName}</span>
+                    <div class="device-header-main">
+                        <span class="device-name">${device.deviceName}</span>
+                        ${additionalInfoHTML ? `<div class="device-additional-info">${additionalInfoHTML}</div>` : ''}
+                    </div>
                     <div class="device-stats">
                         <span class="stat">Pickups: ${device.totalPickups}</span>
                         <span class="stat">RFID: ${device.withRfid}</span>
@@ -163,9 +176,9 @@ function renderDeviceSummaries(deviceSummaries) {
                 </div>
                 <div class="device-details" id="device-${device.deviceId}">
                     <div class="device-summary">
-                        <p><strong>Assigned to:</strong> ${device.responsiblePerson || 'Not assigned'}</p>
-                        <p><strong>Registration:</strong> ${device.regOznaka || 'Not available'}</p>
-                        <p><strong>Note:</strong> ${device.napomena || '-'}</p>
+                        ${device.responsiblePerson ? `<p><strong>Assigned to:</strong> ${device.responsiblePerson}</p>` : ''}
+                        ${device.regOznaka ? `<p><strong>Registration:</strong> ${device.regOznaka}</p>` : ''}
+                        ${device.napomena ? `<p><strong>Note:</strong> ${device.napomena}</p>` : ''}
                     </div>
                     <h4>Pickups (${device.totalPickups})</h4>
                     <div class="pickups-list">
@@ -183,15 +196,22 @@ function renderDeviceSummaries(deviceSummaries) {
 function renderPickupsList(pickups) {
     if (!pickups.length) return '<p>No pickups found.</p>';
     
-    return pickups.map((pickup, index) => `
+    return pickups.map((pickup, index) => {
+        // Create address if both Ulica and KucniBroj exist
+        const addressText = pickup.Ulica && pickup.KucniBroj 
+            ? `${pickup.Ulica} ${pickup.KucniBroj}` 
+            : (pickup.Ulica || pickup.KucniBroj || '-');
+        
+        return `
         <div class="pickup-item" onclick="showPickupDetails(${index}, '${pickup.deviceId}')">
             <p><strong>Time:</strong> ${pickup.dateTime}</p>
             <p><strong>RFID:</strong> ${pickup.rfid_value || 'None'}</p>
             <p><strong>Collection ID:</strong> ${pickup.collectionId || 'N/A'}</p>
             <p><strong>Facility Name:</strong> ${pickup.NazivObjekta || pickup.real_estate_name || '-'}</p>
             <p><strong>Facility Code:</strong> ${pickup.SifraObjekta || pickup.foreignId || '-'}</p>
+            <p><strong>Address:</strong> ${addressText}</p>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 // Show pickup details
@@ -201,6 +221,11 @@ function showPickupDetails(pickupIndex, deviceId) {
     
     const pickup = device.pickups[pickupIndex];
     const pickupDetailsElement = document.getElementById('pickup-details');
+    
+    // Combine address from Ulica and KucniBroj
+    const addressText = pickup.Ulica && pickup.KucniBroj 
+        ? `${pickup.Ulica} ${pickup.KucniBroj}` 
+        : (pickup.Ulica || pickup.KucniBroj || 'Not available');
     
     // Format details
     const detailsHTML = `
@@ -225,6 +250,10 @@ function showPickupDetails(pickupIndex, deviceId) {
             <div class="detail-row">
                 <div class="detail-label">Facility Code:</div>
                 <div class="detail-value">${pickup.SifraObjekta || pickup.foreignId || '-'}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Address:</div>
+                <div class="detail-value">${addressText}</div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">RFID Value:</div>
