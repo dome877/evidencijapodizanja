@@ -433,34 +433,34 @@ async function updateDeviceInfo(deviceId, deviceName) {
     const regOznaka = document.getElementById(`registration-${deviceId}`).value;
     const napomena = document.getElementById(`note-${deviceId}`).value;
     
-    // Get the first pickup to extract the _id (assuming it exists)
-    const firstPickup = device.pickups[0];
-    if (!firstPickup || !firstPickup._id) {
-        showUpdateStatus(deviceId, 'Greška: Nije moguće pronaći ID za ažuriranje.', 'error');
-        return;
-    }
-    
     // Get current date in format DD.MM.YYYY
     const today = new Date();
     const formattedDate = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
     
+    // Determine if we need to create (POST) or update (PUT)
+    const usePost = !device.pickups.length || !device.pickups[0]._id;
+    
     // Prepare payload
     const payload = {
-        _id: firstPickup._id,
-        date: formattedDate,
         deviceName: deviceName,
         napomena: napomena,
         reg_oznaka: regOznaka,
-        zadužio: responsiblePerson
+        zadužio: responsiblePerson,
+        date: formattedDate
     };
+    
+    // If updating, add the _id
+    if (!usePost && device.pickups[0]._id) {
+        payload._id = device.pickups[0]._id;
+    }
     
     // Show loading status
     showUpdateStatus(deviceId, 'Ažuriranje u tijeku...', 'loading');
     
     try {
-        // Send the PUT request
+        // Send the request (either POST or PUT)
         const response = await fetch(API_CONFIG.updateUrl, {
-            method: 'PUT',
+            method: usePost ? 'POST' : 'PUT',
             headers: API_CONFIG.headers(),
             body: JSON.stringify(payload)
         });
@@ -470,11 +470,28 @@ async function updateDeviceInfo(deviceId, deviceName) {
         }
         
         const data = await response.json();
+        console.log("Server response:", data);
         
         // Update the local data
         device.responsiblePerson = responsiblePerson;
         device.regOznaka = regOznaka;
         device.napomena = napomena;
+        
+        // If this was a POST and we got back an ID, store it
+        if (usePost && data && data._id) {
+            console.log("New record created with ID:", data._id);
+            // If there are no pickups, create a dummy one to store the ID
+            if (!device.pickups.length) {
+                device.pickups.push({
+                    _id: data._id,
+                    deviceId: deviceId,
+                    deviceName: deviceName
+                });
+            } else {
+                // Otherwise update the first pickup with the ID
+                device.pickups[0]._id = data._id;
+            }
+        }
         
         // Show success message
         showUpdateStatus(deviceId, 'Uspješno ažurirano!', 'success');
