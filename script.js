@@ -39,7 +39,7 @@ function displayUserInfo() {
     // Update header with user name/email
     const userInfoElement = document.getElementById('user-info');
     if (userInfoElement) {
-        userInfoElement.textContent = userData.email || userData.username || 'Authenticated User';
+        userInfoElement.textContent = userData.email || userData.username || 'Prijavljeni korisnik';
     }
 }
 
@@ -60,13 +60,13 @@ async function fetchWasteCollectionData(date) {
         });
         
         if (!response.ok) {
-            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            throw new Error(`API zahtjev nije uspio: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
         return data.root || [];
     } catch (error) {
-        console.error('Error fetching waste collection data:', error);
+        console.error('Greška pri dohvatu podataka:', error);
         throw error;
     }
 }
@@ -78,7 +78,7 @@ function processDataByDevice(data) {
     
     data.forEach(item => {
         const deviceId = item.deviceId || 'unknown';
-        const deviceName = item.deviceName || 'Unknown Device';
+        const deviceName = item.deviceName || 'Nepoznati uređaj';
         
         if (!deviceGroups[deviceId]) {
             deviceGroups[deviceId] = {
@@ -131,7 +131,7 @@ function renderDeviceSummaries(deviceSummaries) {
     devicesOverviewElement.innerHTML = '';
     
     if (deviceSummaries.length === 0) {
-        devicesOverviewElement.innerHTML = '<p>No data available for selected date.</p>';
+        devicesOverviewElement.innerHTML = '<p>Nema dostupnih podataka za odabrani datum.</p>';
         return;
     }
     
@@ -155,7 +155,7 @@ function renderDeviceSummaries(deviceSummaries) {
         // Prepare additional info for non-expanded card
         let additionalInfoHTML = '';
         if (device.responsiblePerson) {
-            additionalInfoHTML += `<span class="device-info-item">Assigned to: ${device.responsiblePerson}</span>`;
+            additionalInfoHTML += `<span class="device-info-item">Zadužio: ${device.responsiblePerson}</span>`;
         }
         if (device.regOznaka) {
             additionalInfoHTML += `<span class="device-info-item">Reg: ${device.regOznaka}</span>`;
@@ -169,18 +169,18 @@ function renderDeviceSummaries(deviceSummaries) {
                         ${additionalInfoHTML ? `<div class="device-additional-info">${additionalInfoHTML}</div>` : ''}
                     </div>
                     <div class="device-stats">
-                        <span class="stat">Pickups: ${device.totalPickups}</span>
+                        <span class="stat">Podizanja: ${device.totalPickups}</span>
                         <span class="stat">RFID: ${device.withRfid}</span>
                         ${percentageHTML}
                     </div>
                 </div>
                 <div class="device-details" id="device-${device.deviceId}">
                     <div class="device-summary">
-                        ${device.responsiblePerson ? `<p><strong>Assigned to:</strong> ${device.responsiblePerson}</p>` : ''}
-                        ${device.regOznaka ? `<p><strong>Registration:</strong> ${device.regOznaka}</p>` : ''}
-                        ${device.napomena ? `<p><strong>Note:</strong> ${device.napomena}</p>` : ''}
+                        ${device.responsiblePerson ? `<p><strong>Zadužio:</strong> ${device.responsiblePerson}</p>` : ''}
+                        ${device.regOznaka ? `<p><strong>Registracija:</strong> ${device.regOznaka}</p>` : ''}
+                        ${device.napomena ? `<p><strong>Napomena:</strong> ${device.napomena}</p>` : ''}
                     </div>
-                    <h4>Pickups (${device.totalPickups})</h4>
+                    <h4>Podizanja (${device.totalPickups})</h4>
                     <div class="pickups-list">
                         ${renderPickupsList(device.pickups)}
                     </div>
@@ -194,7 +194,7 @@ function renderDeviceSummaries(deviceSummaries) {
 
 // Render pickups list for a device
 function renderPickupsList(pickups) {
-    if (!pickups.length) return '<p>No pickups found.</p>';
+    if (!pickups.length) return '<p>Nema pronađenih podizanja.</p>';
     
     return pickups.map((pickup, index) => {
         // Create address if both Ulica and KucniBroj exist
@@ -209,12 +209,12 @@ function renderPickupsList(pickups) {
         
         return `
         <div class="pickup-item" onclick="showPickupDetails(${index}, '${pickup.deviceId}')">
-            <p><strong>Time:</strong> ${pickup.dateTime}</p>
-            <p><strong>RFID:</strong> ${pickup.rfid_value || 'None'}</p>
-            <p><strong>Collection ID:</strong> ${pickup.collectionId || 'N/A'}</p>
-            <p><strong>Facility Name:</strong> ${facilityNameDisplay}</p>
-            <p><strong>Facility Code:</strong> ${facilityCodeDisplay}</p>
-            <p><strong>Address:</strong> ${addressText}</p>
+            <p><strong>Vrijeme:</strong> ${pickup.dateTime}</p>
+            <p><strong>RFID:</strong> ${pickup.rfid_value || 'Nema'}</p>
+            <p><strong>ID kolekcije:</strong> ${pickup.collectionId || 'N/A'}</p>
+            <p><strong>Naziv objekta:</strong> ${facilityNameDisplay}</p>
+            <p><strong>Šifra objekta:</strong> ${facilityCodeDisplay}</p>
+            <p><strong>Adresa:</strong> ${addressText}</p>
         </div>
     `}).join('');
 }
@@ -230,7 +230,7 @@ function showPickupDetails(pickupIndex, deviceId) {
     // Combine address from Ulica and KucniBroj
     const addressText = pickup.Ulica && pickup.KucniBroj 
         ? `${pickup.Ulica} ${pickup.KucniBroj}` 
-        : (pickup.Ulica || pickup.KucniBroj || 'Not available');
+        : (pickup.Ulica || pickup.KucniBroj || 'Nije dostupno');
     
     // Check if ZajednickaPostuda is "Da"
     const isZajednickaPostuda = pickup.ZajednickaPostuda === "Da";
@@ -238,7 +238,7 @@ function showPickupDetails(pickupIndex, deviceId) {
     const facilityCodeDisplay = isZajednickaPostuda ? "Zajednička Posuda" : (pickup.SifraObjekta || pickup.foreignId || '-');
     
     // Format coordinates as a Google Maps link if available
-    let coordinatesDisplay = 'Not available';
+    let coordinatesDisplay = 'Nije dostupno';
     if (pickup.latitude && pickup.longitude) {
         coordinatesDisplay = `<a href="https://google.com/maps/place/${pickup.latitude},${pickup.longitude}" target="_blank">${pickup.latitude}, ${pickup.longitude}</a>`;
     }
@@ -246,51 +246,56 @@ function showPickupDetails(pickupIndex, deviceId) {
     // Format details
     const detailsHTML = `
         <div class="pickup-detail">
-            <h4>Pickup Details</h4>
+            <h4>Detalji podizanja</h4>
             <div class="detail-row">
-                <div class="detail-label">Date/Time:</div>
+                <div class="detail-label">Datum/Vrijeme:</div>
                 <div class="detail-value">${pickup.dateTime || 'N/A'}</div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">Collection ID:</div>
+                <div class="detail-label">ID kolekcije:</div>
                 <div class="detail-value">${pickup.collectionId || 'N/A'}</div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">Device:</div>
-                <div class="detail-value">${pickup.deviceName || 'Unknown'}</div>
+                <div class="detail-label">Uređaj:</div>
+                <div class="detail-value">${pickup.deviceName || 'Nepoznato'}</div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">Facility Name:</div>
+                <div class="detail-label">Naziv objekta:</div>
                 <div class="detail-value">${facilityNameDisplay}</div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">Facility Code:</div>
+                <div class="detail-label">Šifra objekta:</div>
                 <div class="detail-value">${facilityCodeDisplay}</div>
             </div>
+            ${pickup.VrstaObjekta ? `
             <div class="detail-row">
-                <div class="detail-label">Address:</div>
+                <div class="detail-label">Vrsta objekta:</div>
+                <div class="detail-value">${pickup.VrstaObjekta}</div>
+            </div>` : ''}
+            <div class="detail-row">
+                <div class="detail-label">Adresa:</div>
                 <div class="detail-value">${addressText}</div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">RFID Value:</div>
-                <div class="detail-value">${pickup.rfid_value || 'None'}</div>
+                <div class="detail-label">RFID vrijednost:</div>
+                <div class="detail-value">${pickup.rfid_value || 'Nema'}</div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">RFID Type:</div>
-                <div class="detail-value">${pickup.rfid_type || 'None'}</div>
+                <div class="detail-label">RFID tip:</div>
+                <div class="detail-value">${pickup.rfid_type || 'Nema'}</div>
             </div>
             ${pickup.DatumAktivacije ? `
             <div class="detail-row">
-                <div class="detail-label">Datum Aktivacije:</div>
+                <div class="detail-label">Datum aktivacije:</div>
                 <div class="detail-value">${pickup.DatumAktivacije}</div>
             </div>` : ''}
             <div class="detail-row">
-                <div class="detail-label">Coordinates:</div>
+                <div class="detail-label">Koordinate:</div>
                 <div class="detail-value">${coordinatesDisplay}</div>
             </div>
             ${pickup.ZajednickaPostuda ? `
             <div class="detail-row">
-                <div class="detail-label">Zajednička Posuda:</div>
+                <div class="detail-label">Zajednička posuda:</div>
                 <div class="detail-value">${pickup.ZajednickaPostuda}</div>
             </div>` : ''}
         </div>
@@ -333,7 +338,7 @@ async function loadDataForDate() {
     const selectedDate = dateInput.value;
     
     if (!selectedDate) {
-        alert('Please select a date');
+        alert('Molimo odaberite datum');
         return;
     }
     
@@ -352,7 +357,7 @@ async function loadDataForDate() {
     } catch (error) {
         document.getElementById('devices-overview').innerHTML = `
             <div class="error-message">
-                <h3>Error Loading Data</h3>
+                <h3>Greška pri učitavanju podataka</h3>
                 <p>${error.message}</p>
             </div>
         `;
@@ -368,7 +373,7 @@ async function initApp() {
         const isAuthenticated = await window.Auth.initAuth();
         
         if (isAuthenticated) {
-            console.log('User is authenticated');
+            console.log('Korisnik je prijavljen');
             displayUserInfo();
             window.Auth.setupTokenRefresh();
             
@@ -383,12 +388,12 @@ async function initApp() {
         // Debug token info in console
         window.Auth.debugTokens();
     } catch (error) {
-        console.error('App initialization error:', error);
+        console.error('Greška pri inicijalizaciji aplikacije:', error);
         document.getElementById('loading').innerHTML = `
             <div class="error-message">
-                <h3>Application Error</h3>
+                <h3>Greška u aplikaciji</h3>
                 <p>${error.message}</p>
-                <button onclick="window.location.reload()">Retry</button>
+                <button onclick="window.location.reload()">Pokušaj ponovno</button>
             </div>
         `;
     }
