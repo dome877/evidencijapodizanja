@@ -1,3 +1,10 @@
+/* CSS Reset */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 /* Global Styles */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -6,6 +13,7 @@ body {
     padding: 20px;
     background-color: #f8f9fa;
     color: #343a40;
+    line-height: 1.5;
 }
 
 /* Header Styles */

@@ -179,7 +179,6 @@ function renderDeviceSummaries(deviceSummaries) {
                     </div>
                     <div class="device-stats">
                         <span class="stat">Podizanja: ${device.totalPickups}</span>
-                        <span class="stat">RFID: ${device.withRfid}</span>
                         ${percentageHTML}
                     </div>
                 </div>
@@ -295,6 +294,11 @@ function showPickupDetails(pickupIndex, deviceId) {
             <div class="detail-row">
                 <div class="detail-label">Vrsta objekta:</div>
                 <div class="detail-value">${pickup.VrstaObjekta}</div>
+            </div>` : ''}
+            ${pickup.VrstaPosude ? `
+            <div class="detail-row">
+                <div class="detail-label">Vrsta posude:</div>
+                <div class="detail-value">${pickup.VrstaPosude}</div>
             </div>` : ''}
             <div class="detail-row">
                 <div class="detail-label">Adresa:</div>
