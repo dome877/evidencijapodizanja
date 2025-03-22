@@ -90,7 +90,7 @@ function processDataByDevice(data) {
                 withoutRfid: 0,
                 responsiblePerson: null,
                 regOznaka: null,
-                napomena: '-'
+                napomena: null
             };
         }
         
@@ -102,6 +102,11 @@ function processDataByDevice(data) {
         // Store registration data (reg_oznaka) if available
         if (item.reg_oznaka && !deviceGroups[deviceId].regOznaka) {
             deviceGroups[deviceId].regOznaka = item.reg_oznaka;
+        }
+        
+        // Store napomena if available
+        if (item.napomena && item.napomena !== '-' && !deviceGroups[deviceId].napomena) {
+            deviceGroups[deviceId].napomena = item.napomena;
         }
         
         // Count RFID vs non-RFID pickups
@@ -297,6 +302,11 @@ function showPickupDetails(pickupIndex, deviceId) {
             <div class="detail-row">
                 <div class="detail-label">Zajednička posuda:</div>
                 <div class="detail-value">${pickup.ZajednickaPostuda}</div>
+            </div>` : ''}
+            ${pickup.napomena ? `
+            <div class="detail-row">
+                <div class="detail-label">Napomena:</div>
+                <div class="detail-value">${pickup.napomena}</div>
             </div>` : ''}
         </div>
     `;

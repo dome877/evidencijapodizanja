@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evidencija Podizanja</title>
+    <meta name="description" content="Aplikacija za evidenciju podizanja spremnika otpada">
+    <meta name="theme-color" content="#2E7D32">
+    <title>Evidencija Podizanja Spremnika</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <!-- Loading indicator -->
@@ -15,25 +18,25 @@
     <!-- Main application container (hidden until authenticated) -->
     <div id="app">
         <header>
-            <div class="logo">Evidencija podizanja spremnika</div>
+            <div class="logo"><i class="fas fa-recycle"></i> Evidencija podizanja spremnika</div>
             <div class="auth-controls">
                 <div id="user-info" class="user-info"></div>
-                <button id="logout-btn" onclick="window.Auth.logout()">Logout</button>
+                <button id="logout-btn" onclick="window.Auth.logout()"><i class="fas fa-sign-out-alt"></i> Odjava</button>
             </div>
         </header>
 
         <div class="container">
             <div class="date-selector">
-                <h2>Pregled prikupljanja otpada</h2>
+                <h2><i class="fas fa-calendar-alt"></i> Pregled prikupljanja otpada</h2>
                 <div class="date-input">
                     <label for="collection-date">Odaberite datum:</label>
                     <input type="date" id="collection-date">
-                    <button id="load-data-btn">Prikaži</button>
+                    <button id="load-data-btn"><i class="fas fa-search"></i> Prikaži</button>
                 </div>
             </div>
 
             <div class="overview-section" id="overview-section">
-                <h3>Pregled prema uređaju</h3>
+                <h3><i class="fas fa-truck"></i> Pregled prema uređaju</h3>
                 <div class="overview-loader" id="overview-loader">
                     <div class="spinner"></div>
                     <p>Učitavanje podataka...</p>
@@ -42,11 +45,17 @@
             </div>
 
             <div class="details-section" id="details-section">
-                <h3>Detalji o odvozu</h3>
+                <h3><i class="fas fa-info-circle"></i> Detalji o odvozu</h3>
                 <div class="pickup-details" id="pickup-details"></div>
             </div>
         </div>
     </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Evidencija podizanja spremnika</p>
+        </div>
+    </footer>
 
     <!-- Authentication script -->
     <script src="auth.js"></script>
