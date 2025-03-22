@@ -433,15 +433,8 @@ async function updateDeviceInfo(deviceId, deviceName) {
     const regOznaka = document.getElementById(`registration-${deviceId}`).value;
     const napomena = document.getElementById(`note-${deviceId}`).value;
     
-    // Get record ID - check for both id and _id formats
-    const getRecordId = (pickup) => {
-        if (!pickup) return null;
-        return pickup._id || pickup.id || null;
-    };
-    
     // Determine if we need to create (POST) or update (PUT)
-    const recordId = device.pickups.length ? getRecordId(device.pickups[0]) : null;
-    const usePost = !recordId;
+    const usePost = !device.pickups.length || !device.pickups[0]._id;
     
     // Get the date selected in the calendar
     const calendarDateInput = document.getElementById('collection-date');
@@ -472,12 +465,10 @@ async function updateDeviceInfo(deviceId, deviceName) {
         date: selectedDateStr
     };
     
-    // If updating, add the id
-    if (!usePost && recordId) {
-        // Use the same field name as what we found (either id or _id)
-        const idFieldName = device.pickups[0].hasOwnProperty('_id') ? '_id' : 'id';
-        payload[idFieldName] = recordId;
-        console.log(`Updating record with ${idFieldName}: ${recordId}`);
+    // If updating, add the _id
+    if (!usePost && device.pickups[0]._id) {
+        payload._id = device.pickups[0]._id;
+        console.log(`Updating record with ID: ${payload._id}`);
     }
     
     // Show loading status
@@ -503,27 +494,20 @@ async function updateDeviceInfo(deviceId, deviceName) {
         device.regOznaka = regOznaka;
         device.napomena = napomena;
         
-        // Get the ID from the response (checking both formats)
-        const responseId = data._id || data.id;
-        
         // If this was a POST and we got back an ID, store it
-        if (usePost && responseId) {
-            console.log("New record created with ID:", responseId);
-            // Choose the field name based on what the server returned
-            const idFieldName = data.hasOwnProperty('_id') ? '_id' : 'id';
-            
+        if (usePost && data && data._id) {
+            console.log("New record created with ID:", data._id);
             // If there are no pickups, create a dummy one to store the ID
             if (!device.pickups.length) {
-                const newPickup = {
+                device.pickups.push({
+                    _id: data._id,
                     deviceId: deviceId,
                     deviceName: deviceName,
                     date: selectedDateStr
-                };
-                newPickup[idFieldName] = responseId;
-                device.pickups.push(newPickup);
+                });
             } else {
                 // Otherwise update the first pickup with the ID
-                device.pickups[0][idFieldName] = responseId;
+                device.pickups[0]._id = data._id;
                 device.pickups[0].date = selectedDateStr;
             }
         }
