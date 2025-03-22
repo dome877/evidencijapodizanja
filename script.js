@@ -433,12 +433,22 @@ async function updateDeviceInfo(deviceId, deviceName) {
     const regOznaka = document.getElementById(`registration-${deviceId}`).value;
     const napomena = document.getElementById(`note-${deviceId}`).value;
     
-    // Get current date in format DD.MM.YYYY
-    const today = new Date();
-    const formattedDate = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
-    
     // Determine if we need to create (POST) or update (PUT)
     const usePost = !device.pickups.length || !device.pickups[0]._id;
+    
+    // Get date to use - for updates, use the original date from the record
+    let dateToUse;
+    if (!usePost && device.pickups[0] && device.pickups[0].date) {
+        // Use the original date for updates
+        dateToUse = device.pickups[0].date;
+    } else {
+        // Use today's date for new records
+        const today = new Date();
+        dateToUse = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
+    }
+    
+    // Log what we're doing for debugging
+    console.log(`${usePost ? 'Creating new record' : 'Updating record'} for device ${deviceId} using date: ${dateToUse}`);
     
     // Prepare payload
     const payload = {
@@ -446,12 +456,13 @@ async function updateDeviceInfo(deviceId, deviceName) {
         napomena: napomena,
         reg_oznaka: regOznaka,
         zadužio: responsiblePerson,
-        date: formattedDate
+        date: dateToUse
     };
     
     // If updating, add the _id
     if (!usePost && device.pickups[0]._id) {
         payload._id = device.pickups[0]._id;
+        console.log(`Updating record with ID: ${payload._id}`);
     }
     
     // Show loading status
@@ -485,11 +496,13 @@ async function updateDeviceInfo(deviceId, deviceName) {
                 device.pickups.push({
                     _id: data._id,
                     deviceId: deviceId,
-                    deviceName: deviceName
+                    deviceName: deviceName,
+                    date: dateToUse
                 });
             } else {
                 // Otherwise update the first pickup with the ID
                 device.pickups[0]._id = data._id;
+                device.pickups[0].date = dateToUse;
             }
         }
         
