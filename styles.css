@@ -366,4 +366,118 @@ footer {
 
 footer p {
     margin: 0;
+}
+
+/* Device Edit Form Styles */
+.device-edit-form {
+    background-color: #f8f9fa;
+    padding: 16px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.form-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.form-row label {
+    width: 120px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-row input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-row input:focus {
+    border-color: #64B5F6;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
+}
+
+.edit-save-btn {
+    display: block;
+    margin-top: 16px;
+    padding: 8px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.edit-save-btn:hover {
+    background-color: #218838;
+}
+
+.edit-save-btn i {
+    margin-right: 6px;
+}
+
+.update-status {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 500;
+    display: none;
+}
+
+.update-status.loading {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.update-status.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.update-status.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Info Banner */
+.info-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background-color: #cfe8ff;
+    color: #0d47a1;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.info-banner i {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+.close-banner {
+    background: none;
+    border: none;
+    color: #0d47a1;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 0 0 15px;
+    box-shadow: none;
+}
+
+.close-banner:hover {
+    color: #1976D2;
+    background: none;
 } 

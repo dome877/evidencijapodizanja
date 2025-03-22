@@ -1,6 +1,7 @@
 // API configuration
 const API_CONFIG = {
     baseUrl: "https://xg77afez86.execute-api.eu-north-1.amazonaws.com/prod/evidencija",
+    updateUrl: "https://xg77afez86.execute-api.eu-north-1.amazonaws.com/prod/update",
     headers: function() {
         return {
             "Authorization": `Bearer ${window.Auth.getIdToken()}`,
@@ -184,9 +185,24 @@ function renderDeviceSummaries(deviceSummaries) {
                 </div>
                 <div class="device-details" id="device-${device.deviceId}">
                     <div class="device-summary">
-                        ${device.responsiblePerson ? `<p><strong>Zadužio:</strong> ${device.responsiblePerson}</p>` : ''}
-                        ${device.regOznaka ? `<p><strong>Registracija:</strong> ${device.regOznaka}</p>` : ''}
-                        ${device.napomena ? `<p><strong>Napomena:</strong> ${device.napomena}</p>` : ''}
+                        <div class="device-edit-form">
+                            <div class="form-row">
+                                <label for="responsible-${device.deviceId}">Zadužio:</label>
+                                <input type="text" id="responsible-${device.deviceId}" value="${device.responsiblePerson || ''}">
+                            </div>
+                            <div class="form-row">
+                                <label for="registration-${device.deviceId}">Registracija:</label>
+                                <input type="text" id="registration-${device.deviceId}" value="${device.regOznaka || ''}">
+                            </div>
+                            <div class="form-row">
+                                <label for="note-${device.deviceId}">Napomena:</label>
+                                <input type="text" id="note-${device.deviceId}" value="${device.napomena || ''}">
+                            </div>
+                            <button class="edit-save-btn" onclick="updateDeviceInfo('${device.deviceId}', '${device.deviceName}')">
+                                <i class="fas fa-save"></i> Spremi promjene
+                            </button>
+                            <div id="update-status-${device.deviceId}" class="update-status"></div>
+                        </div>
                     </div>
                     <h4>Podizanja (${device.totalPickups})</h4>
                     <div class="pickups-list">
@@ -407,9 +423,103 @@ async function initApp() {
     }
 }
 
+// Update device information
+async function updateDeviceInfo(deviceId, deviceName) {
+    const device = deviceSummaries.find(d => d.deviceId === deviceId);
+    if (!device) return;
+    
+    // Get the values from the form
+    const responsiblePerson = document.getElementById(`responsible-${deviceId}`).value;
+    const regOznaka = document.getElementById(`registration-${deviceId}`).value;
+    const napomena = document.getElementById(`note-${deviceId}`).value;
+    
+    // Get the first pickup to extract the _id (assuming it exists)
+    const firstPickup = device.pickups[0];
+    if (!firstPickup || !firstPickup._id) {
+        showUpdateStatus(deviceId, 'Greška: Nije moguće pronaći ID za ažuriranje.', 'error');
+        return;
+    }
+    
+    // Get current date in format DD.MM.YYYY
+    const today = new Date();
+    const formattedDate = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
+    
+    // Prepare payload
+    const payload = {
+        _id: firstPickup._id,
+        date: formattedDate,
+        deviceName: deviceName,
+        napomena: napomena,
+        reg_oznaka: regOznaka,
+        zadužio: responsiblePerson
+    };
+    
+    // Show loading status
+    showUpdateStatus(deviceId, 'Ažuriranje u tijeku...', 'loading');
+    
+    try {
+        // Send the PUT request
+        const response = await fetch(API_CONFIG.updateUrl, {
+            method: 'PUT',
+            headers: API_CONFIG.headers(),
+            body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Update the local data
+        device.responsiblePerson = responsiblePerson;
+        device.regOznaka = regOznaka;
+        device.napomena = napomena;
+        
+        // Show success message
+        showUpdateStatus(deviceId, 'Uspješno ažurirano!', 'success');
+        
+        // Re-render device summaries to reflect changes
+        renderDeviceSummaries(deviceSummaries);
+        
+        // Reopen the details view
+        const deviceDetailsElement = document.getElementById(`device-${deviceId}`);
+        if (deviceDetailsElement) {
+            deviceDetailsElement.style.display = 'block';
+        }
+        
+    } catch (error) {
+        console.error('Error updating device info:', error);
+        showUpdateStatus(deviceId, `Greška: ${error.message}`, 'error');
+    }
+}
+
+// Display status message for update operation
+function showUpdateStatus(deviceId, message, type) {
+    const statusElement = document.getElementById(`update-status-${deviceId}`);
+    if (!statusElement) return;
+    
+    statusElement.textContent = message;
+    statusElement.className = 'update-status';
+    statusElement.classList.add(type);
+    statusElement.style.display = 'block';
+    
+    // Clear success/error message after 5 seconds
+    if (type === 'success' || type === 'error') {
+        setTimeout(() => {
+            statusElement.textContent = '';
+            statusElement.className = 'update-status';
+            statusElement.style.display = 'none';
+        }, 5000);
+    }
+}
+
 // Make functions available globally for onclick handlers
 window.toggleDeviceDetails = toggleDeviceDetails;
 window.showPickupDetails = showPickupDetails;
+window.updateDeviceInfo = updateDeviceInfo;
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', initApp); 
+document.addEventListener('DOMContentLoaded', initApp);
+
+console.log("Updating device info API integration active!"); 
