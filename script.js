@@ -436,19 +436,25 @@ async function updateDeviceInfo(deviceId, deviceName) {
     // Determine if we need to create (POST) or update (PUT)
     const usePost = !device.pickups.length || !device.pickups[0]._id;
     
-    // Get date to use - for updates, use the original date from the record
-    let dateToUse;
-    if (!usePost && device.pickups[0] && device.pickups[0].date) {
-        // Use the original date for updates
-        dateToUse = device.pickups[0].date;
+    // Get the date selected in the calendar
+    const calendarDateInput = document.getElementById('collection-date');
+    let selectedDateStr = calendarDateInput.value;
+    
+    // Convert YYYY-MM-DD to DD.MM.YYYY format for the API
+    if (selectedDateStr) {
+        const parts = selectedDateStr.split('-');
+        if (parts.length === 3) {
+            // Format as DD.MM.YYYY
+            selectedDateStr = `${parts[2]}.${parts[1]}.${parts[0]}`;
+        }
     } else {
-        // Use today's date for new records
+        // Fallback to today if somehow the date is not available
         const today = new Date();
-        dateToUse = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
+        selectedDateStr = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
     }
     
     // Log what we're doing for debugging
-    console.log(`${usePost ? 'Creating new record' : 'Updating record'} for device ${deviceId} using date: ${dateToUse}`);
+    console.log(`${usePost ? 'Creating new record' : 'Updating record'} for device ${deviceId} using selected date: ${selectedDateStr}`);
     
     // Prepare payload
     const payload = {
@@ -456,7 +462,7 @@ async function updateDeviceInfo(deviceId, deviceName) {
         napomena: napomena,
         reg_oznaka: regOznaka,
         zadužio: responsiblePerson,
-        date: dateToUse
+        date: selectedDateStr
     };
     
     // If updating, add the _id
@@ -497,12 +503,12 @@ async function updateDeviceInfo(deviceId, deviceName) {
                     _id: data._id,
                     deviceId: deviceId,
                     deviceName: deviceName,
-                    date: dateToUse
+                    date: selectedDateStr
                 });
             } else {
                 // Otherwise update the first pickup with the ID
                 device.pickups[0]._id = data._id;
-                device.pickups[0].date = dateToUse;
+                device.pickups[0].date = selectedDateStr;
             }
         }
         
