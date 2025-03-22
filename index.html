@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evidencija Podizanja - Waste Collection Overview</title>
+    <title>Evidencija Podizanja</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Loading indicator -->
     <div id="loading">
-        <p>Initializing application...</p>
+        <p>Autentifikacija...</p>
     </div>
 
     <!-- Main application container (hidden until authenticated) -->
     <div id="app">
         <header>
-            <div class="logo">Evidencija Podizanja</div>
+            <div class="logo">Evidencija podizanja spremnika</div>
             <div class="auth-controls">
                 <div id="user-info" class="user-info"></div>
                 <button id="logout-btn" onclick="window.Auth.logout()">Logout</button>
@@ -24,25 +24,25 @@
 
         <div class="container">
             <div class="date-selector">
-                <h2>Waste Collection Overview</h2>
+                <h2>Pregled prikupljanja otpada</h2>
                 <div class="date-input">
-                    <label for="collection-date">Select Date:</label>
+                    <label for="collection-date">Odaberite datum:</label>
                     <input type="date" id="collection-date">
-                    <button id="load-data-btn">Load Data</button>
+                    <button id="load-data-btn">Prikaži</button>
                 </div>
             </div>
 
             <div class="overview-section" id="overview-section">
-                <h3>Overview by Device</h3>
+                <h3>Pregled prema uređaju</h3>
                 <div class="overview-loader" id="overview-loader">
                     <div class="spinner"></div>
-                    <p>Loading data...</p>
+                    <p>Učitavanje podataka...</p>
                 </div>
                 <div class="devices-overview" id="devices-overview"></div>
             </div>
 
             <div class="details-section" id="details-section">
-                <h3>Collection Details</h3>
+                <h3>Detalji o odvozu</h3>
                 <div class="pickup-details" id="pickup-details"></div>
             </div>
         </div>

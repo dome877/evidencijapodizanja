@@ -246,7 +246,7 @@ function showPickupDetails(pickupIndex, deviceId) {
     // Format details
     const detailsHTML = `
         <div class="pickup-detail">
-            <h4>Detalji podizanja</h4>
+            <h4>Detalji odvoza</h4>
             <div class="detail-row">
                 <div class="detail-label">Datum/Vrijeme:</div>
                 <div class="detail-value">${pickup.dateTime || 'N/A'}</div>
