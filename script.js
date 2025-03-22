@@ -165,6 +165,9 @@ function renderDeviceSummaries(deviceSummaries) {
         if (device.regOznaka) {
             additionalInfoHTML += `<span class="device-info-item">Reg: ${device.regOznaka}</span>`;
         }
+        if (device.napomena) {
+            additionalInfoHTML += `<span class="device-info-item">Napomena: ${device.napomena}</span>`;
+        }
         
         const deviceCardHTML = `
             <div class="device-card" data-device-id="${device.deviceId}">
@@ -302,11 +305,6 @@ function showPickupDetails(pickupIndex, deviceId) {
             <div class="detail-row">
                 <div class="detail-label">Zajednička posuda:</div>
                 <div class="detail-value">${pickup.ZajednickaPostuda}</div>
-            </div>` : ''}
-            ${pickup.napomena ? `
-            <div class="detail-row">
-                <div class="detail-label">Napomena:</div>
-                <div class="detail-value">${pickup.napomena}</div>
             </div>` : ''}
         </div>
     `;
