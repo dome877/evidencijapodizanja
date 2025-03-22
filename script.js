@@ -201,14 +201,19 @@ function renderPickupsList(pickups) {
         const addressText = pickup.Ulica && pickup.KucniBroj 
             ? `${pickup.Ulica} ${pickup.KucniBroj}` 
             : (pickup.Ulica || pickup.KucniBroj || '-');
+
+        // Check if ZajednickaPostuda is "Da"
+        const isZajednickaPostuda = pickup.ZajednickaPostuda === "Da";
+        const facilityNameDisplay = isZajednickaPostuda ? "Zajednička Posuda" : (pickup.NazivObjekta || pickup.real_estate_name || '-');
+        const facilityCodeDisplay = isZajednickaPostuda ? "Zajednička Posuda" : (pickup.SifraObjekta || pickup.foreignId || '-');
         
         return `
         <div class="pickup-item" onclick="showPickupDetails(${index}, '${pickup.deviceId}')">
             <p><strong>Time:</strong> ${pickup.dateTime}</p>
             <p><strong>RFID:</strong> ${pickup.rfid_value || 'None'}</p>
             <p><strong>Collection ID:</strong> ${pickup.collectionId || 'N/A'}</p>
-            <p><strong>Facility Name:</strong> ${pickup.NazivObjekta || pickup.real_estate_name || '-'}</p>
-            <p><strong>Facility Code:</strong> ${pickup.SifraObjekta || pickup.foreignId || '-'}</p>
+            <p><strong>Facility Name:</strong> ${facilityNameDisplay}</p>
+            <p><strong>Facility Code:</strong> ${facilityCodeDisplay}</p>
             <p><strong>Address:</strong> ${addressText}</p>
         </div>
     `}).join('');
@@ -226,6 +231,17 @@ function showPickupDetails(pickupIndex, deviceId) {
     const addressText = pickup.Ulica && pickup.KucniBroj 
         ? `${pickup.Ulica} ${pickup.KucniBroj}` 
         : (pickup.Ulica || pickup.KucniBroj || 'Not available');
+    
+    // Check if ZajednickaPostuda is "Da"
+    const isZajednickaPostuda = pickup.ZajednickaPostuda === "Da";
+    const facilityNameDisplay = isZajednickaPostuda ? "Zajednička Posuda" : (pickup.NazivObjekta || pickup.real_estate_name || '-');
+    const facilityCodeDisplay = isZajednickaPostuda ? "Zajednička Posuda" : (pickup.SifraObjekta || pickup.foreignId || '-');
+    
+    // Format coordinates as a Google Maps link if available
+    let coordinatesDisplay = 'Not available';
+    if (pickup.latitude && pickup.longitude) {
+        coordinatesDisplay = `<a href="https://google.com/maps/place/${pickup.latitude},${pickup.longitude}" target="_blank">${pickup.latitude}, ${pickup.longitude}</a>`;
+    }
     
     // Format details
     const detailsHTML = `
@@ -245,11 +261,11 @@ function showPickupDetails(pickupIndex, deviceId) {
             </div>
             <div class="detail-row">
                 <div class="detail-label">Facility Name:</div>
-                <div class="detail-value">${pickup.NazivObjekta || pickup.real_estate_name || '-'}</div>
+                <div class="detail-value">${facilityNameDisplay}</div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">Facility Code:</div>
-                <div class="detail-value">${pickup.SifraObjekta || pickup.foreignId || '-'}</div>
+                <div class="detail-value">${facilityCodeDisplay}</div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">Address:</div>
@@ -263,10 +279,20 @@ function showPickupDetails(pickupIndex, deviceId) {
                 <div class="detail-label">RFID Type:</div>
                 <div class="detail-value">${pickup.rfid_type || 'None'}</div>
             </div>
+            ${pickup.DatumAktivacije ? `
+            <div class="detail-row">
+                <div class="detail-label">Datum Aktivacije:</div>
+                <div class="detail-value">${pickup.DatumAktivacije}</div>
+            </div>` : ''}
             <div class="detail-row">
                 <div class="detail-label">Coordinates:</div>
-                <div class="detail-value">${pickup.latitude && pickup.longitude ? `${pickup.latitude}, ${pickup.longitude}` : 'Not available'}</div>
+                <div class="detail-value">${coordinatesDisplay}</div>
             </div>
+            ${pickup.ZajednickaPostuda ? `
+            <div class="detail-row">
+                <div class="detail-label">Zajednička Posuda:</div>
+                <div class="detail-value">${pickup.ZajednickaPostuda}</div>
+            </div>` : ''}
         </div>
     `;
     
