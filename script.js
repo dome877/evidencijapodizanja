@@ -55,6 +55,9 @@ async function fetchWasteCollectionData(date) {
             dateTo: formattedDate
         });
         
+        // Debug logging
+        console.log(`Fetching data for date: ${formattedDate}`);
+        
         const response = await fetch(`${API_CONFIG.baseUrl}?${params}`, {
             method: 'GET',
             headers: API_CONFIG.headers()
@@ -65,6 +68,22 @@ async function fetchWasteCollectionData(date) {
         }
         
         const data = await response.json();
+        console.log(`Received ${data.root ? data.root.length : 0} records from API`);
+        
+        // Log the first few records to see their structure
+        if (data.root && data.root.length > 0) {
+            console.log('Sample record:', data.root[0]);
+            
+            // Check and print dates to debug
+            const uniqueDates = new Set();
+            data.root.forEach(item => {
+                if (item.date) {
+                    uniqueDates.add(item.date);
+                }
+            });
+            console.log('Unique dates in response:', Array.from(uniqueDates));
+        }
+        
         return data.root || [];
     } catch (error) {
         console.error('Greška pri dohvatu podataka:', error);
@@ -77,9 +96,25 @@ function processDataByDevice(data) {
     // Group data by device
     const deviceGroups = {};
     
+    // Get the selected date for date validation
+    const dateInput = document.getElementById('collection-date');
+    const selectedDate = dateInput.value; // Format: YYYY-MM-DD
+    const selectedDateParts = selectedDate.split('-');
+    
+    // Format selected date as DD.MM.YYYY for comparison
+    const formattedSelectedDate = `${selectedDateParts[2]}.${selectedDateParts[1]}.${selectedDateParts[0]}`;
+    console.log(`Filtering for date: ${formattedSelectedDate}`);
+    
     data.forEach(item => {
         const deviceId = item.deviceId || 'unknown';
         const deviceName = item.deviceName || 'Nepoznati uređaj';
+        
+        // Skip records that don't match the selected date
+        // Compare item.date with the selected date if it exists
+        if (item.date && item.date !== formattedSelectedDate) {
+            console.log(`Skipping item with date ${item.date} for device ${deviceName} (${deviceId}) because it doesn't match selected date ${formattedSelectedDate}`);
+            return;
+        }
         
         if (!deviceGroups[deviceId]) {
             deviceGroups[deviceId] = {
@@ -91,39 +126,58 @@ function processDataByDevice(data) {
                 withoutRfid: 0,
                 responsiblePerson: null,
                 regOznaka: null,
-                napomena: null
+                napomena: null,
+                date: item.date // Store the date from the item
             };
         }
         
-        // Store responsible person (zaduzio) if available
-        if (item.zaduzio && !deviceGroups[deviceId].responsiblePerson) {
+        // Only use data from records matching the selected date
+        const recordMatchesSelectedDate = !item.date || item.date === formattedSelectedDate;
+        
+        // Store responsible person (zaduzio) if available and matches date
+        if (recordMatchesSelectedDate && item.zaduzio && !deviceGroups[deviceId].responsiblePerson) {
             deviceGroups[deviceId].responsiblePerson = item.zaduzio;
         }
         
-        // Store registration data (reg_oznaka) if available
-        if (item.reg_oznaka && !deviceGroups[deviceId].regOznaka) {
+        // Store registration data (reg_oznaka) if available and matches date
+        if (recordMatchesSelectedDate && item.reg_oznaka && !deviceGroups[deviceId].regOznaka) {
             deviceGroups[deviceId].regOznaka = item.reg_oznaka;
         }
         
-        // Store napomena if available
-        if (item.napomena && item.napomena !== '-' && !deviceGroups[deviceId].napomena) {
+        // Store napomena if available and matches date
+        if (recordMatchesSelectedDate && item.napomena && item.napomena !== '-' && !deviceGroups[deviceId].napomena) {
             deviceGroups[deviceId].napomena = item.napomena;
         }
         
-        // Count RFID vs non-RFID pickups
-        deviceGroups[deviceId].totalPickups++;
-        if (item.rfid_value && item.rfid_value !== '-') {
-            deviceGroups[deviceId].withRfid++;
-        } else {
-            deviceGroups[deviceId].withoutRfid++;
-        }
+        // Only count and add pickups that we want to show (for date filtering of actual pickups)
+        const shouldIncludePickup = true; // We've already filtered by date above
         
-        // Add to pickups array
-        deviceGroups[deviceId].pickups.push(item);
+        if (shouldIncludePickup) {
+            // Count RFID vs non-RFID pickups
+            deviceGroups[deviceId].totalPickups++;
+            if (item.rfid_value && item.rfid_value !== '-') {
+                deviceGroups[deviceId].withRfid++;
+            } else {
+                deviceGroups[deviceId].withoutRfid++;
+            }
+            
+            // Add to pickups array
+            deviceGroups[deviceId].pickups.push(item);
+        }
+    });
+    
+    // Filter out devices that don't have the correct date
+    const filteredDevices = Object.values(deviceGroups).filter(device => {
+        // Check if the device has a date and it matches the selected date
+        if (device.date && device.date !== formattedSelectedDate) {
+            console.log(`Filtering out device ${device.deviceName} (${device.deviceId}) because its date ${device.date} doesn't match selected date ${formattedSelectedDate}`);
+            return false;
+        }
+        return true;
     });
     
     // Convert to array and calculate percentages
-    return Object.values(deviceGroups).map(device => {
+    return filteredDevices.map(device => {
         device.rfidPercentage = device.totalPickups > 0 
             ? Math.round((device.withRfid / device.totalPickups) * 100) 
             : 0;
