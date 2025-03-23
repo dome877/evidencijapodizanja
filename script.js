@@ -83,10 +83,12 @@ function processDataByDevice(data) {
     data.forEach(item => {
         const deviceId = item.deviceId || 'unknown';
         const deviceName = item.deviceName || 'Nepoznati uređaj';
-        const itemDate = item.date; // The date field in your database records
+        const itemDate = item.date;
+        console.log(itemDate);
+        console.log(selectedDate);
         
         // Skip if dates don't match
-        if (itemDate && itemDate !== formattedSelectedDate) {
+        if (itemDate && itemDate !== selectedDate) {
             return;
         }
         
