@@ -55,9 +55,6 @@ async function fetchWasteCollectionData(date) {
             dateTo: formattedDate
         });
         
-        // Debug logging
-        console.log(`Fetching data for date: ${formattedDate}`);
-        
         const response = await fetch(`${API_CONFIG.baseUrl}?${params}`, {
             method: 'GET',
             headers: API_CONFIG.headers()
@@ -68,22 +65,6 @@ async function fetchWasteCollectionData(date) {
         }
         
         const data = await response.json();
-        console.log(`Received ${data.root ? data.root.length : 0} records from API`);
-        
-        // Log the first few records to see their structure
-        if (data.root && data.root.length > 0) {
-            console.log('Sample record:', data.root[0]);
-            
-            // Check and print dates to debug
-            const uniqueDates = new Set();
-            data.root.forEach(item => {
-                if (item.date) {
-                    uniqueDates.add(item.date);
-                }
-            });
-            console.log('Unique dates in response:', Array.from(uniqueDates));
-        }
-        
         return data.root || [];
     } catch (error) {
         console.error('Greška pri dohvatu podataka:', error);
@@ -96,155 +77,53 @@ function processDataByDevice(data) {
     // Group data by device
     const deviceGroups = {};
     
-    // Get the selected date for filtering
-    const dateInput = document.getElementById('collection-date');
-    const selectedDate = dateInput.value; // Format: YYYY-MM-DD
-    const selectedDateParts = selectedDate.split('-');
-    
-    // Format selected date as DD.MM.YYYY for comparison with configuration records
-    const formattedSelectedDate = `${selectedDateParts[2]}.${selectedDateParts[1]}.${selectedDateParts[0]}`;
-    console.log(`Processing data for date: ${formattedSelectedDate}`);
-    
-    // Create date objects for pickup filtering
-    const selectedDateStart = new Date(selectedDate);
-    selectedDateStart.setHours(0, 0, 0, 0);
-    const selectedDateEnd = new Date(selectedDate);
-    selectedDateEnd.setHours(23, 59, 59, 999);
-    
-    // First pass: gather all unique devices
-    const allDevices = new Set();
-    data.forEach(item => {
-        if (item.deviceId) {
-            allDevices.add(item.deviceId);
-        }
-    });
-    
-    console.log(`Found ${allDevices.size} unique devices in the data`);
-    
-    // Initialize device groups for all devices
-    allDevices.forEach(deviceId => {
-        // Find a sample item for this device to get the name
-        const deviceSample = data.find(item => item.deviceId === deviceId);
-        const deviceName = deviceSample ? deviceSample.deviceName || 'Nepoznati uređaj' : 'Nepoznati uređaj';
-        
-        deviceGroups[deviceId] = {
-            deviceId,
-            deviceName,
-            pickups: [],
-            totalPickups: 0,
-            withRfid: 0,
-            withoutRfid: 0,
-            responsiblePerson: null,
-            regOznaka: null,
-            napomena: null,
-            date: null,
-            hasConfigForSelectedDate: false
-        };
-    });
-    
-    // Second pass: Process each item
     data.forEach(item => {
         const deviceId = item.deviceId || 'unknown';
+        const deviceName = item.deviceName || 'Nepoznati uređaj';
         
         if (!deviceGroups[deviceId]) {
-            // This should never happen since we initialized all devices above
-            console.warn(`Device ${deviceId} found in data but not initialized. Adding now.`);
             deviceGroups[deviceId] = {
                 deviceId,
-                deviceName: item.deviceName || 'Nepoznati uređaj',
+                deviceName,
                 pickups: [],
                 totalPickups: 0,
                 withRfid: 0,
                 withoutRfid: 0,
                 responsiblePerson: null,
                 regOznaka: null,
-                napomena: null,
-                date: null,
-                hasConfigForSelectedDate: false
+                napomena: null
             };
         }
         
-        // Check if this is a configuration record (has a date field)
-        const isConfigRecord = !!item.date;
-        
-        if (isConfigRecord) {
-            console.log(`Found config record for device ${deviceId}: date=${item.date}, matches selected=${item.date === formattedSelectedDate}`);
-            
-            // For config records, only use data if it matches our exact date
-            if (item.date === formattedSelectedDate) {
-                deviceGroups[deviceId].responsiblePerson = item.zaduzio || deviceGroups[deviceId].responsiblePerson;
-                deviceGroups[deviceId].regOznaka = item.reg_oznaka || deviceGroups[deviceId].regOznaka;
-                deviceGroups[deviceId].napomena = (item.napomena && item.napomena !== '-') ? 
-                    item.napomena : deviceGroups[deviceId].napomena;
-                deviceGroups[deviceId].date = item.date;
-                deviceGroups[deviceId].hasConfigForSelectedDate = true;
-                
-                // Store the ID for updating
-                if (item._id) {
-                    if (!deviceGroups[deviceId].pickups.length) {
-                        deviceGroups[deviceId].pickups.push({
-                            _id: item._id,
-                            deviceId: deviceId,
-                            deviceName: item.deviceName,
-                            date: item.date
-                        });
-                    } else {
-                        // Only update if not already set
-                        if (!deviceGroups[deviceId].pickups[0]._id) {
-                            deviceGroups[deviceId].pickups[0]._id = item._id;
-                        }
-                    }
-                }
-            }
-        } else {
-            // This is a pickup record - filter by the dateTime field
-            const isPickupOnSelectedDate = (() => {
-                if (!item.dateTime) return false;
-                
-                try {
-                    const pickupDate = new Date(item.dateTime);
-                    if (isNaN(pickupDate.getTime())) return false;
-                    
-                    return (pickupDate >= selectedDateStart && pickupDate <= selectedDateEnd);
-                } catch (e) {
-                    console.error(`Error parsing date: ${item.dateTime}`, e);
-                    return false;
-                }
-            })();
-            
-            if (isPickupOnSelectedDate) {
-                // This pickup is for the selected date
-                deviceGroups[deviceId].totalPickups++;
-                
-                if (item.rfid_value && item.rfid_value !== '-') {
-                    deviceGroups[deviceId].withRfid++;
-                } else {
-                    deviceGroups[deviceId].withoutRfid++;
-                }
-                
-                // Add to pickups array
-                deviceGroups[deviceId].pickups.push(item);
-            }
+        // Store responsible person (zaduzio) if available
+        if (item.zaduzio && !deviceGroups[deviceId].responsiblePerson) {
+            deviceGroups[deviceId].responsiblePerson = item.zaduzio;
         }
+        
+        // Store registration data (reg_oznaka) if available
+        if (item.reg_oznaka && !deviceGroups[deviceId].regOznaka) {
+            deviceGroups[deviceId].regOznaka = item.reg_oznaka;
+        }
+        
+        // Store napomena if available
+        if (item.napomena && item.napomena !== '-' && !deviceGroups[deviceId].napomena) {
+            deviceGroups[deviceId].napomena = item.napomena;
+        }
+        
+        // Count RFID vs non-RFID pickups
+        deviceGroups[deviceId].totalPickups++;
+        if (item.rfid_value && item.rfid_value !== '-') {
+            deviceGroups[deviceId].withRfid++;
+        } else {
+            deviceGroups[deviceId].withoutRfid++;
+        }
+        
+        // Add to pickups array
+        deviceGroups[deviceId].pickups.push(item);
     });
     
-    // Convert to array and filter out irrelevant devices
-    const filteredDevices = Object.values(deviceGroups).filter(device => {
-        // Keep all devices that have pickups for this date
-        if (device.totalPickups > 0) return true;
-        
-        // Keep devices that have config for this date
-        if (device.hasConfigForSelectedDate) return true;
-        
-        // Otherwise filter it out
-        console.log(`Filtering out device ${device.deviceName} (${device.deviceId}) - no activity on selected date`);
-        return false;
-    });
-    
-    console.log(`Showing ${filteredDevices.length} devices after filtering`);
-    
-    // Calculate percentages for the kept devices
-    return filteredDevices.map(device => {
+    // Convert to array and calculate percentages
+    return Object.values(deviceGroups).map(device => {
         device.rfidPercentage = device.totalPickups > 0 
             ? Math.round((device.withRfid / device.totalPickups) * 100) 
             : 0;
