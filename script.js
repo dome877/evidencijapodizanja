@@ -72,25 +72,14 @@ async function fetchWasteCollectionData(date) {
     }
 }
 
-
 // Process data to create device summaries
 function processDataByDevice(data) {
     // Group data by device
     const deviceGroups = {};
-    const selectedDate = document.getElementById('collection-date').value;
-    const formattedSelectedDate = formatDate(selectedDate); // Convert to DD.MM.YYYY
     
     data.forEach(item => {
         const deviceId = item.deviceId || 'unknown';
         const deviceName = item.deviceName || 'Nepoznati uređaj';
-        const itemDate = item.date;
-        console.log(itemDate);
-        console.log(selectedDate);
-        
-        // Skip if dates don't match
-        if (itemDate && itemDate !== selectedDate) {
-            return;
-        }
         
         if (!deviceGroups[deviceId]) {
             deviceGroups[deviceId] = {
@@ -133,13 +122,6 @@ function processDataByDevice(data) {
         deviceGroups[deviceId].pickups.push(item);
     });
     
-    // Add helper function to format date consistently
-    function formatDate(dateStr) {
-        if (!dateStr) return '';
-        const d = new Date(dateStr);
-        return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
-    }
-    
     // Convert to array and calculate percentages
     return Object.values(deviceGroups).map(device => {
         device.rfidPercentage = device.totalPickups > 0 
@@ -148,7 +130,6 @@ function processDataByDevice(data) {
         return device;
     });
 }
-
 
 // Render device summaries
 function renderDeviceSummaries(deviceSummaries) {
