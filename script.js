@@ -463,9 +463,9 @@ async function updateDeviceInfo(deviceId, deviceName) {
     // Prepare payload
     const payload = {
         deviceName: deviceName,
-        napomena: napomena,
-        reg_oznaka: regOznaka,
-        zadužio: responsiblePerson,
+        napomena: napomena || '',
+        reg_oznaka: regOznaka || '',
+        zadužio: responsiblePerson || '',
         date: selectedDateStr
     };
     
