@@ -65,28 +65,7 @@ async function fetchWasteCollectionData(date) {
         }
         
         const data = await response.json();
-        const results = data.root || [];
-        
-        // Ensure exact date match (DD.MM.YYYY format)
-        const selectedDateStr = `${String(dateObj.getDate()).padStart(2, '0')}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${dateObj.getFullYear()}`;
-        
-        console.log(`Filtering for exact date: ${selectedDateStr}`);
-        console.log(`Total records from API: ${results.length}`);
-        
-        // Filter results to only include records for the exact selected date
-        const filteredResults = results.filter(item => {
-            // Add debug logging
-            if (item.deviceId === '40200') {
-                console.log(`Device 40200 record:`, item);
-                console.log(`Date comparison: item.date=${item.date}, selectedDate=${selectedDateStr}, match=${!item.date || item.date === selectedDateStr}`);
-            }
-            
-            // Check if the item has a date field that matches our selected date
-            return !item.date || item.date === selectedDateStr;
-        });
-        
-        console.log(`Filtered records count: ${filteredResults.length}`);
-        return filteredResults;
+        return data.root || [];
     } catch (error) {
         console.error('Greška pri dohvatu podataka:', error);
         throw error;
@@ -396,17 +375,10 @@ async function loadDataForDate() {
     try {
         // Clear existing data
         document.getElementById('pickup-details').innerHTML = '';
-        document.getElementById('devices-overview').innerHTML = '';
-        
-        // Reset global variables to ensure no data persists between date selections
-        collectionData = [];
-        deviceSummaries = [];
         
         // Fetch and process data
         collectionData = await fetchWasteCollectionData(selectedDate);
         deviceSummaries = processDataByDevice(collectionData);
-        
-        console.log(`Date ${selectedDate}: Found ${deviceSummaries.length} devices after processing`);
         
         // Render data
         renderDeviceSummaries(deviceSummaries);
