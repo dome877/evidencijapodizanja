@@ -77,41 +77,7 @@ function processDataByDevice(data) {
     // Group data by device
     const deviceGroups = {};
     
-    // Get the selected date for filtering
-    const dateInput = document.getElementById('collection-date');
-    const selectedDate = dateInput.value; // Format: YYYY-MM-DD
-    
-    // Create a date object at the start of the selected day (00:00:00)
-    const selectedDateStart = new Date(selectedDate);
-    selectedDateStart.setHours(0, 0, 0, 0);
-    
-    // Create a date object at the end of the selected day (23:59:59)
-    const selectedDateEnd = new Date(selectedDate);
-    selectedDateEnd.setHours(23, 59, 59, 999);
-    
-    // Filter data to include only records from the selected date
     data.forEach(item => {
-        // Check if the item has a date/time and it's within the selected date
-        let isOnSelectedDate = true;
-        
-        if (item.dateTime) {
-            // Extract date part from dateTime if it exists
-            const itemDate = new Date(item.dateTime);
-            
-            // If date is valid, check if it falls within the selected date
-            if (!isNaN(itemDate.getTime())) {
-                isOnSelectedDate = (itemDate >= selectedDateStart && itemDate <= selectedDateEnd);
-                
-                // Debug logging
-                if (!isOnSelectedDate) {
-                    console.log(`Filtering out record with date ${item.dateTime} because it's not on ${selectedDate}`);
-                }
-            }
-        }
-        
-        // Skip items not from the selected date
-        if (!isOnSelectedDate) return;
-        
         const deviceId = item.deviceId || 'unknown';
         const deviceName = item.deviceName || 'Nepoznati uređaj';
         
@@ -253,10 +219,6 @@ function renderDeviceSummaries(deviceSummaries) {
 function renderPickupsList(pickups) {
     if (!pickups.length) return '<p>Nema pronađenih podizanja.</p>';
     
-    // Get the selected date for consistent date formatting
-    const dateInput = document.getElementById('collection-date');
-    const selectedDate = dateInput.value; // Format: YYYY-MM-DD
-    
     return pickups.map((pickup, index) => {
         // Create address if both Ulica and KucniBroj exist
         const addressText = pickup.Ulica && pickup.KucniBroj 
@@ -268,20 +230,9 @@ function renderPickupsList(pickups) {
         const facilityNameDisplay = isZajednickaPostuda ? "Zajednička Posuda" : (pickup.NazivObjekta || pickup.real_estate_name || '-');
         const facilityCodeDisplay = isZajednickaPostuda ? "Zajednička Posuda" : (pickup.SifraObjekta || pickup.foreignId || '-');
         
-        // Format date to show clearly
-        let formattedDateTime = pickup.dateTime || 'N/A';
-        try {
-            const pickupDate = new Date(pickup.dateTime);
-            if (!isNaN(pickupDate.getTime())) {
-                formattedDateTime = `${pickupDate.toLocaleString('hr-HR')} (${pickupDate.toDateString()})`;
-            }
-        } catch (e) {
-            console.error('Error formatting date:', e);
-        }
-        
         return `
         <div class="pickup-item" onclick="showPickupDetails(${index}, '${pickup.deviceId}')">
-            <p><strong>Vrijeme:</strong> ${formattedDateTime}</p>
+            <p><strong>Vrijeme:</strong> ${pickup.dateTime}</p>
             <p><strong>RFID:</strong> ${pickup.rfid_value || 'Nema'}</p>
             <p><strong>ID kolekcije:</strong> ${pickup.collectionId || 'N/A'}</p>
             <p><strong>Naziv objekta:</strong> ${facilityNameDisplay}</p>
